@@ -1,8 +1,14 @@
 # Isabelle temporary files
 *.thy~
 
+<<<<<<< HEAD
 
 hack/
+=======
+# Science Papers
+papers/
+
+>>>>>>> 0b41b6fb1a7218f9204402ee68bd08c10e0a430a
 # Isabelle output files
 output/
 
@@ -534,4 +540,3 @@ venv.bak/
 
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
-
