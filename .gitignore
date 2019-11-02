@@ -1,5 +1,8 @@
 # Isabelle temporary files
-*.thy~
+*.thy
+
+# Temporary Files
+hack/
 
 # Science Papers
 papers/
@@ -9,7 +12,6 @@ papers/
 
 # Isabelle output files
 output/
-
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Example user template template
@@ -26,7 +28,9 @@ gen### Example user template template
 .idea
 *.iml
 out
-gen### Windows template
+gen
+
+### Windows template
 # Windows thumbnail cache files
 Thumbs.db
 ehthumbs.db
