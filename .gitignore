@@ -1,20 +1,24 @@
 # Isabelle temporary files
-*.thy~
+*.thy
 
 <<<<<<< HEAD
-
 act.sh
 
 
-hack/
 =======
+# Temporary Files
+>>>>>>> 84ed79af9511853fe356112d27a339db936a3a0e
+hack/
+*.sh
+
 # Science Papers
 papers/
 
->>>>>>> 0b41b6fb1a7218f9204402ee68bd08c10e0a430a
+# Remove models
+*.tar
+
 # Isabelle output files
 output/
-
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Example user template template
@@ -31,7 +35,9 @@ gen### Example user template template
 .idea
 *.iml
 out
-gen### Windows template
+gen
+
+### Windows template
 # Windows thumbnail cache files
 Thumbs.db
 ehthumbs.db

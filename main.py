@@ -10,6 +10,39 @@ from library.MagneticField import BField, R_y, theta_linear
 def cartesian_product(arrays):
     return np.dstack(np.meshgrid(*arrays, indexing='ij')).reshape(-1, len(arrays))
 
+def timeDeriv(t, traj):
+    
+    timeDifference = t[1]
+    output = []   
+    
+        #Do the first and last values manually because they dont follow the equation
+        
+        #First value
+        
+    x = (traj[1][0] - traj[0][0])/timeDifference
+    y = (traj[1][1] - traj[0][1])/timeDifference
+    z = (traj[1][2] - traj[0][2])/timeDifference
+
+    output.append([x, y, z])
+        
+    #Loop
+    for i in range(1, len(t) - 1):
+        
+        x = (traj[i + 1][0] - traj[i - 1][0])/(2*timeDifference)
+        y = (traj[i + 1][1] - traj[i - 1][1])/(2*timeDifference)
+        z = (traj[i + 1][2] - traj[i - 1][2])/(2*timeDifference)
+
+        output.append([x, y, z])
+        
+        
+        #Last Value
+        
+    x = (traj[len(traj) - 1][0] - traj[len(traj) - 2][0])/timeDifference
+    y = (traj[len(traj) - 1][1] - traj[len(traj) - 2][1])/timeDifference
+    z = (traj[len(traj) - 1][2] - traj[len(traj) - 2][2])/timeDifference
+    output.append([x, y, z])
+    
+    return output
 
 class Run(object):
 
@@ -51,7 +84,7 @@ if __name__ == '__main__':
     t, traj = get_trajectory((var, tf, tauc))
     plt.plot(t, traj)
 
-    plt.legend()
+    #plt.legend()
     plt.xlabel("Time $t$")
     plt.ylabel(r"Expectation values $\langle\sigma_\alpha\rangle$")
     plt.title(f"$B = 1$, $\langle\eta^2\\rangle = {var}$, $\\tau_c = {tauc}$")
