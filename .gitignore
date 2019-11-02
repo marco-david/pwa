@@ -1,6 +1,8 @@
 # Isabelle temporary files
 *.thy~
 
+
+hack/
 # Isabelle output files
 output/
 
