@@ -1,6 +1,9 @@
 # Isabelle temporary files
 *.thy~
 
+# Science Papers
+papers/
+
 # Isabelle output files
 output/
 
@@ -532,4 +535,3 @@ venv.bak/
 
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
-
