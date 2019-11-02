@@ -3,65 +3,48 @@ from random import randint
 # File names
 in_name = 'cat.png'
 out_name = 'cat2.png'
+bw_name = 'blackcat.png'
 
+from PIL import Image 
+
+
+def convert_to_bw(filename):
+    image_file = Image.open(filename) # open colour image
+    image_file = image_file.convert('1') # convert image to black and white
+    image_file.save('blackcat.png')
 # Read data and convert to a list of bits
-def read_file(filename):
-    in_bytes = np.fromfile(filename, dtype = "uint8")
-    in_bits = np.unpackbits(in_bytes)
-    data = list(in_bits)
-    print(len(data))
-    return data
-
 # Convert the list of bits back to bytes and save
-def write_bits(filename,data):
-    out_bits = np.array(data)
-    # print(np.all(out_bits == in_bits))
-    out_bytes = np.packbits(out_bits)
-    # print(np.all(out_bytes == in_bytes))
-    out_bytes.tofile(out_name)
 
 
-def duplicate_bytes(input_data, k=2):
-    new_bytes = []
-    for b in input_data:
-        new_bytes.append(b)
-        new_bytes.append(b)
-    return new_bytes
-
-
-def bitflipper(b, errorpercent):
-    number = randint(0, 100)
-    if number < errorpercent:
-        if b == 1:
+def randomize_bw(input_cell, probability):
+    if randint(0,100) < probability:
+        if input_cell > 0:
             return 0
         else:
-            return 1
+            return 255
     else:
-        return b
+        return input_cell
 
-def channel(input_data, errorpercent = 0, duplicates = 2):
-    # no duplication implemented yet. 
-    output_data = []
-    for (index, b) in enumerate(input_data):
-        if index < 64*100:
-            output_data.append(b)
-        else:
-            output_data.append(bitflipper(b, errorpercent))
-    
-    write_bits("outputcat.png", output_data)
-    
+def bw_channel(filename, probability=45, k=2):
+    im = Image.open(filename) # Can be many different formats.
+    pix = im.load()
+    dimension = im.size
+    print(dimension)
+    for i in range(dimension[0]):
+        for j in range(dimension[1]):
+            pix[i,j] = randomize_bw(pix[i,j], probability)
 
-
-
-
-
-
-
-
+    # final = Image.fromarray(pix)
+    im.save('result.png')
+    # Image.save('result.png')
+    # pix[x,y] = value 
 
 if __name__ == "__main__":
-    data = read_file(in_name)
-    channel(data)
+    # convert_to_bw(in_name)
+
+    bw_channel(bw_name)
+    # data = read_file(in_name)
+    # channel(data)
 
 
 
