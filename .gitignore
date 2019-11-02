@@ -3,6 +3,7 @@
 
 # Temporary Files
 hack/
+*.sh
 
 # Science Papers
 papers/
