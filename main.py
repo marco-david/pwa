@@ -51,7 +51,7 @@ if __name__ == '__main__':
     t, traj = get_trajectory((var, tf, tauc))
     plt.plot(t, traj)
 
-    plt.legend()
+    #plt.legend()
     plt.xlabel("Time $t$")
     plt.ylabel(r"Expectation values $\langle\sigma_\alpha\rangle$")
     plt.title(f"$B = 1$, $\langle\eta^2\\rangle = {var}$, $\\tau_c = {tauc}$")

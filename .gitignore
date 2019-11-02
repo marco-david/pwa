@@ -4,6 +4,9 @@
 # Science Papers
 papers/
 
+# Remove models
+*.tar
+
 # Isabelle output files
 output/
 
