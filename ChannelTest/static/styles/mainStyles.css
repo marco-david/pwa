@@ -1,0 +1,195 @@
+*{
+    /* color: rgb(63,70,88); */
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.column {
+    float: left;
+    width: 33.33%;
+}
+
+.column>input{
+    width: 100%;
+}
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+.mainHeader {
+    background-color: black;
+    color: white;
+    width: 100%;
+    height: 20%;
+    position: relative;
+    padding: 0pt;
+    align-content:center;
+    align-self: center;
+    text-align: center;
+}
+
+.mainHeader>.logoBar {
+    align-content: center;
+    align-self: center;
+    text-align: center;
+    font-size: 50pt;
+    cursor: pointer;
+}
+
+.mainBody {
+    background-color: white;
+    margin: 0pt;
+}
+
+.PageTitleDiv{
+    font-size: 20pt;
+    text-align: center;
+    padding: 6pt;
+}
+
+.PageTextContainer{
+    font-size: 12pt;
+    text-align: left;
+    margin-left: 8%;
+    margin-right: 8%;
+}
+
+.PageTextContainer>.subHeader {
+    font-size: 14pt;
+    text-align: center;
+    padding: 6pt;
+}
+
+.PageTextContainer>.subText {
+    font-size: 12pt;
+    padding-left: 12pt;
+    padding-right: 12pt;
+    text-align: left;
+}
+
+.mainNav {
+  background-color: black;
+  overflow: hidden;
+  align-content: center;
+  align-self: center;
+  /* top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); */
+}
+.mainNav a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 6px 6px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.mainNav a:hover {
+  background-color: #ddd;
+  color: black;
+}
+.mainNav a.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+/* Here is for the contact submission area */
+
+
+input[type=text], select, textarea {
+  width: 100%; /* Full width */
+  padding: 12px; /* Some padding */  
+  border: 1px solid #ccc; /* Gray border */
+  border-radius: 4px; /* Rounded borders */
+  box-sizing: border-box; /* Make sure that padding and width stays in place */
+  margin-top: 6px; /* Add a top margin */
+  margin-bottom: 16px; /* Bottom margin */
+  resize: vertical /* Allow the user to vertically resize the textarea (not horizontally) */
+}
+
+/* Style the submit button with a specific background color etc */
+input[type=submit] {
+  background-color: black;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* When moving the mouse over the submit button, add a darker green color */
+input[type=submit]:hover {
+  background-color:rebeccapurple;
+}
+
+/* Add a background color and some padding around the form */
+.container {
+  border-radius: 5px;
+  background-color: #f2f2f2;
+  padding: 20px;
+  align-content: center;
+}
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #2196F3;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}

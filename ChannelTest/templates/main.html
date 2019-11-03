@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+
+<link rel="stylesheet" type="text/css" href="/styles/mainStyles.css">
+<script src="scripts/main.js"></script>
+<html>
+
+
+    <div class="mainHeader">
+        <div class="logoBar" id="logoBar">
+            Channel Capacities
+        </div>
+    </div>
+
+
+    <div class="mainNav">
+        <button onclick="handleClassical()">Classical Channel</button>
+        <button onclick="handleQuantum()">Quantum Channel</button>
+    </div>
+    <body class="mainBody">
+        <br>
+        <br>
+
+
+    <div class="row"> 
+        <div class="column">
+            <div align="center">
+                Input Data
+            </div>
+            <img src="images/blackcat.png" width="100%">
+
+        </div>
+        <div class="column">
+            <div align="center" id="TitleName">
+                Classical Channel
+            </div>
+            <br>
+            <br>
+            <div id="RedundancyTitle" align="center">Redundancy: 1</div>
+            <div align="center" width="100%">
+            <input id="RedundancyCounter" type="range" name="points" min="0" max="5" value="0" width="100%" onchange="updateRedundancy(this.value)">
+            </div>
+
+            <div id="ErrorCont">
+            <div id="ErrorTitle" align="center">Error Probability: 0 </div>
+            <div align="center" width="100%">
+                <input id="ErrorCounter" type="range" name="points" min="0" max="10" value="0" width="100%" onchange="updateError(this.value)">
+            </div>
+            </div>
+
+            <div align="center" id="QuantumButton" hidden>
+                <div id="EntanglementTitle" align="center"> Entanglement Coefficent: 0.125 </div>
+                <div align="center">
+                    <input id="Entaglement" type="range" name="points" min="2" max="8" value="2" width="100%" onchange="updateEntanglement(this.value)">
+                </div>
+                <button id="Qbutt" onclick="ToggleChannels()">Toggle Product Channel</button>
+            </div>
+
+            <div align="center">
+            <button onclick="EvaluateImage()">Evaluate</button>
+            </div>
+    </div>
+
+        <div class="column">
+            <div align="center">
+                Ouput Data
+            </div>
+            <img id="OutputImage" src="images/static.png" width="100%">
+        </div>
+    </div>
+
+    </body>
+</html>
