@@ -2,6 +2,9 @@ import os, sys
 import numpy as np
 from qutip import *
 
+from joblib import Parallel, delayed
+from collections import defaultdict
+
 from library.Solve import Solve
 from library.Noise import UhlenbeckNoise
 from library.MagneticField import BField, R_y, theta_linear
@@ -65,8 +68,22 @@ def get_trajectory(params):
 
 
 def print_progress(i, N):
-    sys.stdout.write(f"\rProcessing {i} out of {N}")
+    sys.stdout.write(f"\rProcessing {i+1} out of {N}.")
     sys.stdout.flush()
+
+
+def generate_this_data(params, initial_state, i, N):
+    T, tf, var, tauc, run_id = params
+    print_progress(i, N)
+
+    t, traj = get_trajectory((var, tf, tauc, T, initial_state))
+    p = deriv(t, traj)
+    statearray = np.concatenate([t[:, np.newaxis], traj, p], axis=1)
+
+    # Save position and momentum values to file
+    directory = f'simulation-data/simulation-data-{run_id}'
+    os.makedirs(directory) if not os.path.exists(directory) else None
+    np.savetxt(directory + f'/data{i}.csv', statearray, delimiter=',')
 
 
 def generate_data(T, tf, var, tauc, N, run_id):
@@ -74,15 +91,7 @@ def generate_data(T, tf, var, tauc, N, run_id):
     theta = np.linspace(0, np.pi / 2, N)
     phi = np.linspace(0, 20 * np.pi, N)
 
-    # MAIN CALL
-    for i in range(N):
-        print_progress(i, N)
-        initial_state = np.cos(theta[i] / 2) * basis(2, 0) + np.exp(1j * phi[i]) * np.sin(theta[i] / 2) * basis(2, 1)
-        t, traj = get_trajectory((var, tf, tauc, T, initial_state))
-        p = deriv(t, traj)
-        statearray = np.concatenate([t[:, np.newaxis], traj, p], axis=1)
+    initial_state = lambda i: np.cos(theta[i] / 2) * basis(2, 0) + np.exp(1j * phi[i]) * np.sin(theta[i] / 2) * basis(2, 1)
 
-        # Save position and momentum values to file
-        directory = f'simulation-data/simulation-data-{run_id}'
-        os.makedirs(directory) if not os.path.exists(directory) else None
-        np.savetxt(directory + f'/data{i}.csv', statearray, delimiter=',')
+    params = (T, tf, var, tauc, run_id)
+    Parallel(n_jobs=-1)(delayed(generate_this_data)(params, initial_state(i), i, N) for i in range(N))

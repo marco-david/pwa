@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     # Constant Parameters
     tf = 20 # Final time
-    var = 0.1 # Noise variance
+    var = 0.06 # Noise variance
     tauc = 5 # Noise Correlation Time
 
     # Run ID
@@ -30,10 +30,10 @@ if __name__ == '__main__':
     # === SIMULATE ===
     generate_data(T, tf, var, tauc, N, rid)
 
-    plot_simulated_data(data_id=rid, save=True)
+    plot_simulated_data(data_id=rid, save=True, params=(var, tauc))
 
     # === TRAIN ===
-    print("Beginning training.")
+    print("\nBeginning training.")
     models = train_models(rid, data_id=rid)
 
     # === LOAD ===
@@ -42,8 +42,3 @@ if __name__ == '__main__':
 
     # === PLOT ===
     integrate_and_plot(models, data_id=rid, params=(var, tauc))
-
-    # data = np.loadtxt(f'simulation-results/data0.csv', delimiter=",") # theta = phi = 0, i.e. [0, 0, 1]
-    # t = data[:, 0]
-    # traj = data[:, 1:4]
-    # plot_trajectory(t, traj, params=(var, tauc), save=f'simulation-results/traj-plane{N}.pdf')

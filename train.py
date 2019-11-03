@@ -79,8 +79,10 @@ def train(data, args):
     train_dist = (dxdt - train_dxdt_hat)**2
     test_dxdt_hat = model.time_derivative(test_x)
     test_dist = (test_dxdt - test_dxdt_hat)**2
-    print('Final train loss {:.4e} +/- {:.4e}\nFinal test loss {:.4e} +/- {:.4e}'
-        .format(train_dist.mean().item(), train_dist.std().item()/np.sqrt(train_dist.shape[0]),
+
+    if args.verbose:
+        print('Final train loss {:.4e} +/- {:.4e}\nFinal test loss {:.4e} +/- {:.4e}'
+            .format(train_dist.mean().item(), train_dist.std().item()/np.sqrt(train_dist.shape[0]),
             test_dist.mean().item(), test_dist.std().item()/np.sqrt(test_dist.shape[0])))
 
     return model, stats
@@ -98,7 +100,14 @@ def integrate_model(model, t_span, y0, **kwargs):
 # === CUSTOMIZED TRAINING & PARALLELIZATION ===
 
 
-def train_this_model(data, i, run_id):
+def print_progress(i, N):
+    sys.stdout.write(f"\rProcessing {i+1} out of {N}.")
+    sys.stdout.flush()
+
+
+def train_this_model(data, i, T, run_id):
+    print_progress(i, T)
+
     pos, vel = data[:, 1:4], data[:, 4:7]
     #pos, vel = data[:, i, 1:4], data[:, i,  4:7]
 
@@ -125,7 +134,7 @@ def train_this_model(data, i, run_id):
     save_model(model, i, run_id, args)
 
     return model
-    
+
 
 def train_models(run_id, data_id):
     directory = f'simulation-data/simulation-data-{data_id}'
@@ -140,10 +149,10 @@ def train_models(run_id, data_id):
     data = np.array(data)
 
     # Finding the number of time values we have for each trajectory
-    increments = data.shape[1]
+    T = data.shape[1]
 
     # Loop the training maxT times
-    models = Parallel(n_jobs=-1)(delayed(train_this_model)(data[:, i, :], i, run_id) for i in range(increments))
+    models = Parallel(n_jobs=-1)(delayed(train_this_model)(data[:, i, :], i, T, run_id) for i in range(T))
 
     return models
 
