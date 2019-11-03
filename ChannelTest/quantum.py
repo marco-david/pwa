@@ -91,7 +91,7 @@ def double_M_channel(input_bit, entangle):
         return 255 if input_bit == 0 else 0
 
 
-def bw_2M_channel(filename, entangle=0.125, k = 0):
+def bw_2M_channel(filename, entangle=8, k = 0):
     im = Image.open(filename)
     pix = im.load()
     dimension = im.size
@@ -99,13 +99,16 @@ def bw_2M_channel(filename, entangle=0.125, k = 0):
     for i in range(dimension[0]):
         for j in range(dimension[1]):
             temp = pix[i,j]
-            temp2 = handle_redundancy(pix[i,j], k, entangle, double_M_channel)
+            temp2 = handle_redundancy(pix[i,j], k, 1/entangle, double_M_channel)
             pix[i,j] = temp2
             if temp == temp2:
                 totaleq += 1
     print(totaleq/(dimension[1] * dimension[0]))
-    im.save("quantum_blackcat.png")
+    im.save(f"quantum-{entangle}-{2*k+1}.png")
 
 if __name__ == "__main__":
     # bw_M_channel("blackcat.png")
-    bw_2M_channel("blackcat.png")
+
+    for k in range(6):
+        bw_2M_channel("blackcat.png", entangle=8, k=k)
+    # bw_2M_channel("blackcat.png")

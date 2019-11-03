@@ -3,15 +3,14 @@ var isevaluated = false;
 var redundancy = 1;
 var error_prob = 0;
 var single = true;
+var entanglement=8;
 
 function updateEntanglement(value){
-    var entanglement = 1/value;
+    entanglement = value;
     var enttitle = document.getElementById("EntanglementTitle");
     enttitle.innerHTML = `Entaglement Coefficient: ${1/value}`;
-
     EvaluateImage();
 }
-
 
 
 
@@ -28,7 +27,7 @@ function handleClassical(){
     var error_dis = document.getElementById("ErrorCont");
     error_dis.hidden = false;
     EvaluateImage();
-}; 
+};
 
 function handleQuantum(){
     if (isclassic){
@@ -41,7 +40,7 @@ function handleQuantum(){
     title.innerHTML = "Quantum Channel";
     var error_dis = document.getElementById("ErrorCont");
     error_dis.hidden = true;
-    EvaluateImage()
+    EvaluateImage();
 }
 
 
@@ -50,7 +49,7 @@ function ToggleChannels(){
     isevaluated = false;
     var qbutt = document.getElementById('Qbutt');
     qbutt.innerHTL = single? "Toggle Product Channel" : "Toggle Single Channel";
-    EvaluateImage()
+    EvaluateImage();
 }
 
 function compute_quantum(){
@@ -58,7 +57,8 @@ function compute_quantum(){
     if (single){
         image.src = "/images/static.png";
     }else{
-        image.src = "/images/";
+        console.log("The thing here");
+        image.src = `/images/quantum-${entanglement}-${redundancy}.png`;
     }
     console.log("Handle quantum");
 }
@@ -87,7 +87,7 @@ function updateError(value){
     error_prob = value/10;
     var errtitle =document.getElementById("ErrorTitle");
     errtitle.innerHTML = `Error Probability: ${error_prob}`;
-    EvaluateImage()
+    EvaluateImage();
 }
 
 
@@ -98,7 +98,7 @@ function updateRedundancy(value){
      redundancy = 2*value + 1;
      var redtitle = document.getElementById("RedundancyTitle");
     redtitle.innerHTML = `Redundancy: ${redundancy}`;
-    EvaluateImage()
+    EvaluateImage();
 };
 
 
