@@ -20,6 +20,8 @@ from hnn.nn_models import MLP
 from hnn.hnn import HNN
 from hnn.utils import L2_loss, rk4
 
+from graphics import plot_trajectory
+
 def get_args():
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--input_dim', default=3, type=int, help='dimensionality of input tensor')
@@ -190,15 +192,7 @@ def integrate_models_plot(models):
         hnn_ivp = integrate_model(model, [t[i], t[i + 1]], yi, **kwargs)
         yi = hnn_ivp['y'][:, -1]  # all 3 dimensions, last value
 
-    import matplotlib.pyplot as plt
-    labels = ['x', 'y', 'z']
-    for i in range(3):
-        pos = np.array(ys)[:, i]
-        plt.plot(t, pos, label=labels[i])
-
-    plt.legend()
-    plt.savefig(f'network-results/model-output-{datetime.now().strftime("%Y-%m-%d-%H:%M")}.pdf')
-    plt.show()
+    plot_trajectory(t, ys, save=f'network-results/model-output-{datetime.now().strftime("%Y-%m-%d-%H:%M")}.pdf')
 
     # plt.xlabel("$q$", fontsize=14)
     # plt.ylabel("$p$", rotation=0, fontsize=14)

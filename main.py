@@ -6,6 +6,7 @@ from joblib import Parallel, delayed
 from library.Solve import Solve
 from library.Noise import UhlenbeckNoise
 from library.MagneticField import BField, R_y, theta_linear
+from graphics import plot_trajectory
 
 
 def cartesian_product(arrays):
@@ -94,15 +95,4 @@ if __name__ == '__main__':
     t = data[:, 0]
     traj = data[:, 1:4]
 
-    labels = ['x', 'y', 'z']
-    for i in range(3):
-        plt.plot(t, traj[:, i], label=labels[i])
-
-    plt.legend()
-    plt.xlabel("Time $t$")
-    plt.ylabel(r"Expectation values $\langle\sigma_\alpha\rangle$")
-    plt.title(f"$B = 1$, $\langle\eta^2\\rangle = {var}$, $\\tau_c = {tauc}$")
-    plt.savefig(f'simulation-results/traj-plane{N}.pdf')
-
-
-
+    plot_trajectory(t, traj, params=(var, tauc), save=f'simulation-results/traj-plane{N}.pdf')
