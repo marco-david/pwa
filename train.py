@@ -1,28 +1,27 @@
+# File originally authored by:
 # Hamiltonian Neural Networks | 2019
 # Sam Greydanus, Misko Dzamba, Jason Yosinski
 
-# Prevent OpenMP issue
-import os
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
+# Adapted for the PWA Project at the McGill Physics Hackathon 2019
 
-import torch, argparse
-import numpy as np
-import scipy.integrate
-from datetime import datetime
-solve_ivp = scipy.integrate.solve_ivp
-
-from joblib import Parallel, delayed
-
+# Prevent OpenMP issue & Setup Paths
 import os, sys
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(PARENT_DIR)
 
-from hnn.nn_models import MLP
-from hnn.hnn import HNN
+import torch, argparse
+import numpy as np
+import scipy.integrate
+solve_ivp = scipy.integrate.solve_ivp
+
+from joblib import Parallel, delayed
+
 from hnn.utils import L2_loss, rk4
 
-from graphics import plot_trajectory
+from serialize import empty_model, save_model, find_n
+
 
 def get_args():
     parser = argparse.ArgumentParser(description=None)
@@ -30,17 +29,14 @@ def get_args():
     parser.add_argument('--hidden_dim', default=200, type=int, help='hidden dimension of mlp')
     parser.add_argument('--learn_rate', default=1e-3, type=float, help='learning rate')
     parser.add_argument('--nonlinearity', default='tanh', type=str, help='neural net nonlinearity')
-    parser.add_argument('--total_steps', default=2000, type=int, help='number of gradient steps')
-    parser.add_argument('--print_every', default=200, type=int, help='number of gradient steps between prints')
-    parser.add_argument('--name', default='spin', type=str, help='only one option right now')
-    parser.add_argument('--baseline', dest='baseline', action='store_true', help='run baseline or experiment?')
-    parser.add_argument('--use_rk4', dest='use_rk4', action='store_true', help='integrate derivative with RK4')
-    parser.add_argument('--verbose', dest='verbose', action='store_true', help='verbose?')
     parser.add_argument('--field_type', default='solenoidal', type=str, help='type of vector field to learn')
-    parser.add_argument('--seed', default=np.random.rand(), type=int, help='random seed')
-    parser.add_argument('--save_dir', default=THIS_DIR + '/network_results', type=str, help='where to save the trained model')
+    parser.add_argument('--use_rk4', dest='use_rk4', action='store_true', help='integrate derivative with RK4')
+    parser.add_argument('--total_steps', default=2000, type=int, help='number of gradient steps')
+    parser.add_argument('--verbose', dest='verbose', action='store_true', help='verbose?')
+    parser.add_argument('--seed', default=0, type=int, help='random seed')
     parser.set_defaults(feature=True)
     return parser.parse_args()
+
 
 def train(data, args):
     # set random seed
@@ -51,10 +47,7 @@ def train(data, args):
     if args.verbose:
         print("Training baseline model:" if args.baseline else "Training HNN model:")
 
-    output_dim = args.input_dim if args.baseline else 2
-    nn_model = MLP(args.input_dim, args.hidden_dim, output_dim, args.nonlinearity)
-    model = HNN(args.input_dim, differentiable_model=nn_model,
-              field_type=args.field_type, baseline=args.baseline)
+    model = empty_model(args)
     optim = torch.optim.Adam(model.parameters(), args.learn_rate, weight_decay=1e-4)
 
     # arrange data
@@ -101,10 +94,13 @@ def integrate_model(model, t_span, y0, **kwargs):
 
     return solve_ivp(fun=fun, t_span=t_span, y0=y0, **kwargs)
 
-def train_this_model():
-#    print(f"Training model {+1} of {increments}...")
 
-    t, pos, vel = data[:, 0], data[:,  1:4], data[:, 4:7]
+# === CUSTOMIZED TRAINING & PARALLELIZATION ===
+
+
+def train_this_model(data, i, run_id):
+    pos, vel = data[:, 1:4], data[:, 4:7]
+    #pos, vel = data[:, i, 1:4], data[:, i,  4:7]
 
     test_split = 0.1
     N_test = int(len(pos) * test_split)
@@ -123,16 +119,22 @@ def train_this_model():
 
     # TRAIN MODEL
     args = get_args()
-    model, stats = train(data2, args)
-    
+    model, _ = train(data2, args)
+
+    # SAVE MODEL
+    save_model(model, i, run_id, args)
+
+    return model
     
 
+def train_models(run_id, data_id):
+    directory = f'simulation-data/simulation-data-{data_id}'
+    N = find_n(directory)
 
-def train_models(N):
     # Loop this shit N times and create an array of all the data
     data = []
     for i in range(N):
-        raw_data = np.loadtxt(f'simulation-results/data{i}.csv', delimiter=',')
+        raw_data = np.loadtxt(directory + f'/data{i}.csv', delimiter=',')
         data.append(raw_data)
 
     data = np.array(data)
@@ -141,72 +143,8 @@ def train_models(N):
     increments = data.shape[1]
 
     # Loop the training maxT times
-    models = []
-    t = None
-    models = Parallel(n_jobs=-1, verbose=verbosity_level, backend="multiprocessing")(
-             map(delayed(train_this_model), [ data[:,i,:]for i in range(increments)]))
-#    for i in range(increments):
+    models = Parallel(n_jobs=-1)(delayed(train_this_model)(data[:, i, :], i, run_id) for i in range(increments))
 
     return models
-
-
-def empty_model(args):
-    output_dim = args.input_dim if args.baseline else 2
-    nn_model = MLP(args.input_dim, args.hidden_dim, output_dim, args.nonlinearity)
-    model = HNN(args.input_dim, differentiable_model=nn_model,
-                field_type=args.field_type, baseline=args.baseline)
-    return model
-
-
-def load_models(N, args):
-    models = []
-    for i in range(N):
-        label = '-rk4' if args.use_rk4 else ''
-        path = '{}/{}{}{}.tar'.format(args.save_dir, args.name, label, i)
-
-        model_state_dict = torch.load(path)
-        model = empty_model(args)
-        model.load_state_dict(model_state_dict)
-        models.append(model)
-    return models
-
-
-def load_t_array():
-    data0 = np.loadtxt(f'simulation-results/data0.csv', delimiter=',')
-    t = data0[:, 0]
-    return t
-
-
-def integrate_models_plot(models):
-    t = load_t_array()
-
-    # Integrate Model
-    yi = np.asarray([0.0, 0.0, 1.0])
-    kwargs = {'rtol': 1e-10, 'method': 'RK45'}
-    # 't_eval': np.linspace(t_span[0], t_span[1], 1000)
-
-    ys = []
-    for i, model in enumerate(models):
-        ys.append(yi)
-        if i is len(models) - 1: break
-
-        hnn_ivp = integrate_model(model, [t[i], t[i + 1]], yi, **kwargs)
-        yi = hnn_ivp['y'][:, -1]  # all 3 dimensions, last value
-
-    plot_trajectory(t, ys, save=f'network-results/model-output-{datetime.now().strftime("%Y-%m-%d-%H:%M")}.pdf')
-
-    # plt.xlabel("$q$", fontsize=14)
-    # plt.ylabel("$p$", rotation=0, fontsize=14)
-    # plt.title("Hamiltonian NN", pad=10)
-    # plt.show()
-
-if __name__ == "__main__":
-    N = 500
-
-    models = train_models(N)
-
-    #models = load_models(N, get_args())
-
-    integrate_models_plot(models)
 
 
