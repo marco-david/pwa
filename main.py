@@ -46,15 +46,16 @@ def timeDeriv(t, traj):
 
 class Run(object):
 
-    def __init__(self, var, tau_c, tf, T_steps):
+    def __init__(self, var, tau_c, tf, T_steps, initial_state=np.array([0, 0, 1])):
         self.mean = 0
         self.var = var
         self.tau_c = tau_c
         self.tf = tf
         self.T_steps = T_steps
+        self.initial_state = initial_state
 
         self.noise = UhlenbeckNoise(self.mean, self.var, self.tau_c)
-        self.B = BField(R_y, theta_linear, np.array([0, 0, 1]))
+        self.B = BField(R_y, theta_linear, self.initial_state)
         self.solve = Solve(self.B, self.noise, self.tf, eigenbasis=True, steps=self.T_steps)
 
 
