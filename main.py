@@ -1,4 +1,5 @@
 import numpy as np
+from qutip import *
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 
@@ -62,7 +63,7 @@ class Run(object):
 
 def get_trajectory(params):
     var, tf, tauc, T, state = params
-    run = Run(var, tauc, tf, T, initial_state = state).solve
+    run = Run(var, tauc, tf, T, initial_state=state).solve
     return run.times, run.expect
 
 
@@ -75,27 +76,23 @@ def get_trajectory(params):
 
 
 if __name__ == '__main__':
-    # Run ID
-    N = 2
-
     # Time steps
-    T = 1000
+    T = 100
 
     # Sample N values in each dimension
     var = 0 # = 1/100 B
     tf = 20
     tauc = 5
 
-    # Create 3 vectors for the initial conditions
+    # Create coordinates for the initial states
     M = 100
-    t = np.linspace(-1,0,M)
-    r = 1
     theta = np.linspace(0, np.pi/2, M)
     phi = np.linspace(0, 20*np.pi, M)
 
     # MAIN CALL
     for i in range(M):
-        t, traj = get_trajectory((var, tf, tauc, T, np.cos(theta/2)*basis(2,0) + np.e**(np.imag*phi)*np.sin(theta/2)*basis(2,1)))
+        initial_state = np.cos(theta[i]/2) * basis(2,0) + np.exp(1j * phi[i]) * np.sin(theta[i]/2) * basis(2,1)
+        t, traj = get_trajectory((var, tf, tauc, T, initial_state))
         p = timeDeriv(t, traj)
         statearray = np.concatenate([t[:, np.newaxis], traj, p], axis=1)
 
