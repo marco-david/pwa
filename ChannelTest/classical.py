@@ -25,7 +25,7 @@ def randomize_bw(input_cell, probability):
     else:
         return input_cell
 
-def bw_channel(filename, probability=45, k=2):
+def bw_channel(filename, probability=20, k=2):
     im = Image.open(filename) # Can be many different formats.
     pix = im.load()
     dimension = im.size
@@ -35,14 +35,17 @@ def bw_channel(filename, probability=45, k=2):
             pix[i,j] = randomize_bw(pix[i,j], probability)
 
     # final = Image.fromarray(pix)
-    im.save('result.png')
+    im.save(f"result{ probability }.png")
     # Image.save('result.png')
     # pix[x,y] = value 
 
 if __name__ == "__main__":
     # convert_to_bw(in_name)
-
-    bw_channel(bw_name)
+    prob = 10
+    while prob <= 50:
+        bw_channel(bw_name, probability=prob)
+         # bw_channel(bw_name)
+        prob += 10
     # data = read_file(in_name)
     # channel(data)
 
