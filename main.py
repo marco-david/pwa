@@ -39,6 +39,16 @@ def timeDeriv(t, traj):
     
     return np.array(output)
 
+def animatePlot(traj, t):
+    sphere = q.Bloch3d()
+    #sphere.show() 
+    
+
+    for i in range(0, len(t) - 5):
+        point = traj[i]
+        sphere.add_points(point)
+        sphere.save(dirc ='temp')    
+    
 
 class Run(object):
 
