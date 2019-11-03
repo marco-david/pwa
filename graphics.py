@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime
@@ -60,17 +61,31 @@ def integrate_and_plot(models, data_id, params=None):
 
 # === ANIMATION ===
 
+def sphere_plot_2d(data_id):
+    sphere = Bloch()
+    sphere.point_color = ['r']
+    sphere.vector_color = ['b']
+    #sphere.point_size = [25]
 
-def sphere_plot(data_id):
-    # Fix Mayavi Issue from StackOverflow
-    #from tvtk.common import configure_input
-    #configure_input(m, cs)  # <== will work
+    t, traj, _ = load_simulated_data(data_id=data_id)
 
-    # bola.add_points(pnts,meth='l') # to plot lines
+    for frame in range(len(t)):
+        sphere.clear()
+        if frame > 0:
+            pnts = traj[:frame].T
+            sphere.add_points(pnts, meth='l')
+        sphere.add_vectors(traj[frame])
+        sphere.save(dirc=f'simulation-results/animation-{data_id}')
 
+    os.system(f"ffmpeg -r 20 -i simulation-results/animation-{data_id}/bloch_%01d.png -pix_fmt yuv420p "
+              f"-y simulation-results/animation-{data_id}.mp4 > /dev/null 2>&1")
+
+
+# WORKING BUT TAKES FOREVER
+def sphere_plot_3d(data_id):
     sphere = Bloch3d()
-    sphere.point_color = ['b']
-    sphere.vector_color = ['r']
+    sphere.point_color = ['r']
+    sphere.vector_color = ['b']
     sphere.point_size = 0.05
     sphere.vector_width = 1
 
@@ -78,14 +93,14 @@ def sphere_plot(data_id):
 
     for frame in range(len(t)):
         sphere.clear()
-        for i in range(frame):
-            point = traj[i]
-            sphere.add_points(point, meth='l')
+        if frame > 0:
+            sphere.add_points(traj[:frame], meth='l')
         sphere.add_vectors(traj[frame])
-        sphere.save(dirc='temp')
+        sphere.save(dirc=f'simulation-results/animation-{data_id}')
 
-    #sphere.save("tmp.pdf")
-    #sphere.show()
+    os.system(f"ffmpeg -r 20 -i simulation-results/animation-{data_id}/bloch_%01d.png -pix_fmt yuv420p "
+              f"-y simulation-results/animation-{data_id}.mp4 > /dev/null 2>&1")
+
 
 if __name__ == '__main__':
-    sphere_plot(20)
+    sphere_plot_2d(22)
