@@ -103,12 +103,11 @@ def bw_2M_channel(filename, entangle=8, k = 0):
             pix[i,j] = temp2
             if temp == temp2:
                 totaleq += 1
-    print(totaleq/(dimension[1] * dimension[0]))
-    im.save(f"quantum-{entangle}-{2*k+1}.png")
+    print(entangle,totaleq/(dimension[1] * dimension[0]))
+    im.save(f"quantum-test.png")
 
 if __name__ == "__main__":
     # bw_M_channel("blackcat.png")
-
-    for k in range(6):
-        bw_2M_channel("blackcat.png", entangle=8, k=k)
+    for e in range(2,9):
+        bw_2M_channel("blackcat.png", entangle=e, k=0)
     # bw_2M_channel("blackcat.png")
