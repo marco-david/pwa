@@ -8,6 +8,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 import torch, argparse
 import numpy as np
 import scipy.integrate
+from datetime import datetime
 solve_ivp = scipy.integrate.solve_ivp
 
 import os, sys
@@ -32,8 +33,8 @@ def get_args():
     parser.add_argument('--use_rk4', dest='use_rk4', action='store_true', help='integrate derivative with RK4')
     parser.add_argument('--verbose', dest='verbose', action='store_true', help='verbose?')
     parser.add_argument('--field_type', default='solenoidal', type=str, help='type of vector field to learn')
-    parser.add_argument('--seed', default=0, type=int, help='random seed')
-    parser.add_argument('--save_dir', default=THIS_DIR, type=str, help='where to save the trained model')
+    parser.add_argument('--seed', default=np.random.rand(), type=int, help='random seed')
+    parser.add_argument('--save_dir', default=THIS_DIR + '/network_results', type=str, help='where to save the trained model')
     parser.set_defaults(feature=True)
     return parser.parse_args()
 
@@ -97,54 +98,84 @@ def integrate_model(model, t_span, y0, **kwargs):
     return solve_ivp(fun=fun, t_span=t_span, y0=y0, **kwargs)
 
 
-if __name__ == "__main__":
-       # EXPERIMENT
-
-     # Read, format and split data
-    N = 2 # Run ID
-    
-    #Loop this shit N times and create an array of all the data
+def train_models(N):
+    # Loop this shit N times and create an array of all the data
     data = []
-    for i in range(1, N+1):
+    for i in range(N):
         raw_data = np.loadtxt(f'simulation-results/data{i}.csv', delimiter=',')
-
-        
         data.append(raw_data)
+
     data = np.array(data)
 
-
-    
-    
-
-    #Finding the number of time values we have for each trajectory
+    # Finding the number of time values we have for each trajectory
     increments = data.shape[1]
 
-    #Loop the training maxT times
-    for i in range(0, increments):
-        
-        pos, vel = data[:, i, 1:4], data[:, i, 4:7]
-        data2 = {'x':pos, 'dx':vel}
-        
-        #Splitting pos
+    # Loop the training maxT times
+    models = []
+    t = None
+    for i in range(increments):
+        print(f"Training model {i+1} of {increments}...")
+
+        t, pos, vel = data[:, i, 0], data[:, i, 1:4], data[:, i, 4:7]
+
         test_split = 0.1
-        N_test = int(len(pos)*test_split)
-    
-        indices = np.random.choice(len(pos), N_test, replace = False)
+        N_test = int(len(pos) * test_split)
+
+        # Splitting pos
+        indices = np.random.choice(len(pos), N_test, replace=False)
         test_pos = pos[indices]
-        train_pos = np.delete(pos, indices)
-        
-        #Splitting vel
-        N_test = int(len(vel)*test_split)
-        
-        indices = np.random.choice(len(vel), N_test, replace = False)
+        train_pos = np.delete(pos, indices, axis=0)
+
+        # Splitting vel
+        indices = np.random.choice(len(vel), N_test, replace=False)
         test_vel = vel[indices]
-        train_vel = np.delete(vel, indices)
-        
-        data2 = {'x':train_pos, 'test_x': test_pos, 'dx': train_vel, 'test_dx': test_vel}
-        
+        train_vel = np.delete(vel, indices, axis=0)
+
+        data2 = {'x': train_pos, 'test_x': test_pos, 'dx': train_vel, 'test_dx': test_vel}
+
         # TRAIN MODEL
         args = get_args()
         model, stats = train(data2, args)
+        models.append(model)
+
+        # save
+        os.makedirs(args.save_dir) if not os.path.exists(args.save_dir) else None
+        label = '-rk4' if args.use_rk4 else ''
+        path = '{}/{}{}{}.tar'.format(args.save_dir, args.name, label, i)
+        torch.save(model.state_dict(), path)
+
+    return models
+
+
+def empty_model(args):
+    output_dim = args.input_dim if args.baseline else 2
+    nn_model = MLP(args.input_dim, args.hidden_dim, output_dim, args.nonlinearity)
+    model = HNN(args.input_dim, differentiable_model=nn_model,
+                field_type=args.field_type, baseline=args.baseline)
+    return model
+
+
+def load_models(N, args):
+    models = []
+    for i in range(N):
+        label = '-rk4' if args.use_rk4 else ''
+        path = '{}/{}{}{}.tar'.format(args.save_dir, args.name, label, i)
+
+        model_state_dict = torch.load(path)
+        model = empty_model(args)
+        model.load_state_dict(model_state_dict)
+        models.append(model)
+    return models
+
+
+def load_t_array():
+    data0 = np.loadtxt(f'simulation-results/data0.csv', delimiter=',')
+    t = data0[:, 0]
+    return t
+
+
+def integrate_models_plot(models):
+    t = load_t_array()
 
     # Integrate Model
     yi = np.asarray([0.0, 0.0, 1.0])
@@ -154,27 +185,33 @@ if __name__ == "__main__":
     ys = []
     for i, model in enumerate(models):
         ys.append(yi)
-        hnn_ivp = integrate_model(model, [t[i], t[i+1]], yi, **kwargs)
-        yi = hnn_ivp['y'][:, -1] # all 3 dimensions, last value
+        if i is len(models) - 1: break
+
+        hnn_ivp = integrate_model(model, [t[i], t[i + 1]], yi, **kwargs)
+        yi = hnn_ivp['y'][:, -1]  # all 3 dimensions, last value
 
     import matplotlib.pyplot as plt
     labels = ['x', 'y', 'z']
     for i in range(3):
-        pos = np.array(ys)[i]
+        pos = np.array(ys)[:, i]
         plt.plot(t, pos, label=labels[i])
 
     plt.legend()
-    plt.savefig(f'network-results/model-output{N}.pdf')
+    plt.savefig(f'network-results/model-output-{datetime.now().strftime("%Y-%m-%d-%H:%M")}.pdf')
     plt.show()
 
-    #plt.xlabel("$q$", fontsize=14)
-    #plt.ylabel("$p$", rotation=0, fontsize=14)
-    #plt.title("Hamiltonian NN", pad=10)
-    #plt.show()
+    # plt.xlabel("$q$", fontsize=14)
+    # plt.ylabel("$p$", rotation=0, fontsize=14)
+    # plt.title("Hamiltonian NN", pad=10)
+    # plt.show()
 
-    # save
-    os.makedirs(args.save_dir) if not os.path.exists(args.save_dir) else None
-    label = '-baseline' if args.baseline else '-hnn'
-    label = '-rk4' + label if args.use_rk4 else label
-    path = '{}/{}{}.tar'.format(args.save_dir, args.name, label)
-    torch.save(model.state_dict(), path)
+if __name__ == "__main__":
+    N = 500
+
+    models = train_models(N)
+
+    #models = load_models(N, get_args())
+
+    integrate_models_plot(models)
+
+

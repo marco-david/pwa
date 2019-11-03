@@ -8,11 +8,6 @@ from library.Noise import UhlenbeckNoise
 from library.MagneticField import BField, R_y, theta_linear
 
 
-def theta_periodic(t, args):
-    tf = args['tf']
-    return 4 * np.pi * t / tf
-
-
 def cartesian_product(arrays):
     return np.dstack(np.meshgrid(*arrays, indexing='ij')).reshape(-1, len(arrays))
 
@@ -58,7 +53,7 @@ class Run(object):
         self.noise = UhlenbeckNoise(self.mean, self.var, self.tau_c)
         self.B = BField(R_y, theta_linear, np.array([0, 0, 1]))
         self.solve = Solve(self.B, self.noise, self.tf, initial_state=self.initial_state,
-                           eigenbasis=True, steps=self.T_steps)
+                           eigenbasis=False, steps=self.T_steps)
 
 
 def get_trajectory(params):
@@ -85,9 +80,9 @@ if __name__ == '__main__':
     tauc = 5
 
     # Create coordinates for the initial states
-    M = 100
-    theta = np.linspace(0, np.pi/2, M)
-    phi = np.linspace(0, 20*np.pi, M)
+    N = 500
+    theta = np.linspace(0, np.pi/2, N)
+    phi = np.linspace(0, 20*np.pi, N)
 
     # MAIN CALL
     for i in range(M):
@@ -109,16 +104,5 @@ if __name__ == '__main__':
 #     plt.title(f"$B = 1$, $\langle\eta^2\\rangle = {var}$, $\\tau_c = {tauc}$")
 #     plt.savefig(f'simulation-results/traj-plane{N}.pdf')
 
-    #errors = np.array(e_list)
-    #means = np.squeeze(errors.mean(axis=0))
-    #stds = np.squeeze(errors.std(axis=0))
-
-    #plt.errorbar(variances, means, yerr=stds, fmt='d')
-    #plt.axhline(analytic_error(tf), xmin=0.025, xmax=0.975)
-
-    #plt.yscale('log')
-    #plt.show()
-    #plt.savefig(f'errors-var-tf--{M}x{N}.pdf')
-    #plt.savefig(f'errors-var({vstart},{vend})-{M}x{N}-tf{tf}-tauc{tauc}.pdf')
 
 
