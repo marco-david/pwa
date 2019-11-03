@@ -117,18 +117,20 @@ if __name__ == "__main__":
     model, stats = train(data, args)
 
     # Integrate Model
-    t_span = [t[0], t[-1]]
-    y0 = np.asarray([0.0, 0.0, 1.0])
-    kwargs = {'t_eval': np.linspace(t_span[0], t_span[1], 1000), 'rtol': 1e-10, 'method': 'RK45'}
+    yi = np.asarray([0.0, 0.0, 1.0])
+    kwargs = {'rtol': 1e-10, 'method': 'RK45'}
+    # 't_eval': np.linspace(t_span[0], t_span[1], 1000)
 
-    hnn_ivp = integrate_model(model, t_span, y0, **kwargs)
+    ys = []
+    for i, model in enumerate(models):
+        ys.append(yi)
+        hnn_ivp = integrate_model(model, [t[i], t[i+1]], yi, **kwargs)
+        yi = hnn_ivp['y'][:, -1] # all 3 dimensions, last value
 
     import matplotlib.pyplot as plt
-
     labels = ['x', 'y', 'z']
     for i in range(3):
-        t = hnn_ivp['t']
-        pos = hnn_ivp['y'][i, :]
+        pos = np.array(ys)[i]
         plt.plot(t, pos, label=labels[i])
 
     plt.legend()
