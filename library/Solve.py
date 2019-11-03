@@ -7,11 +7,11 @@ class Solve(object):
     sigma = [sigmax(), sigmay(), sigmaz()]
     steps_default = 100
 
-    def __init__(self, B, noise, tf, steps=steps_default, init=0, observables=sigma, eigenbasis=True):
+    def __init__(self, B, noise, tf, steps=steps_default, initial_state=basis(2, 0), observables=sigma, eigenbasis=True):
         self.B = B
         self.noise = noise
         self.H = [[1/2 * Solve.sigma[i], B[i]] for i in {0, 1, 2}] + [[1/2 * sigmax(), noise]]
-        self.psi = basis(2, init)
+        self.psi = initial_state
 
         self.tf = tf
         self.steps = steps
