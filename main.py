@@ -86,16 +86,15 @@ if __name__ == '__main__':
     tauc = 5
 
     # Create 3 vectors for the initial conditions
-    a = 1 # large a concentrates the spiral at the pole
-    M =10000
+    M = 100
     t = np.linspace(-1,0,M)
-    x = np.cos(t)/(1+(a*t)**2)**(1/2)
-    y = np.sin(t)/(1+(a*t)**2)**(1/2)
-    z = -a*t/(1+(a*t)**2)**(1/2)
+    r = 1
+    theta = np.linspace(0, np.pi/2, M)
+    phi = np.linspace(0, 20*np.pi, M)
 
     # MAIN CALL
     for i in range(M):
-        t, traj = get_trajectory((var, tf, tauc, T, np.array([x[i],y[i],z[i]])))
+        t, traj = get_trajectory((var, tf, tauc, T, np.cos(theta/2)*basis(2,0) + np.e**(np.imag*phi)*np.sin(theta/2)*basis(2,1)))
         p = timeDeriv(t, traj)
         statearray = np.concatenate([t[:, np.newaxis], traj, p], axis=1)
 
