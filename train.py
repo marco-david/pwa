@@ -98,23 +98,53 @@ def integrate_model(model, t_span, y0, **kwargs):
 
 
 if __name__ == "__main__":
-    # EXPERIMENT
+       # EXPERIMENT
 
-    # Read, format and split data
+     # Read, format and split data
     N = 2 # Run ID
-    raw_data = np.loadtxt(f'simulation-results/data{N}.csv', delimiter=',')
-    t, pos, vel = raw_data[:, 0], raw_data[:, 1:4], raw_data[:, 4:7]
+    
+    #Loop this shit N times and create an array of all the data
+    data = []
+    for i in range(1, N+1):
+        raw_data = np.loadtxt(f'simulation-results/data{i}.csv', delimiter=',')
 
-    test_split = 0.1
+        
+        data.append(raw_data)
+    data = np.array(data)
 
-    data = dict()
-    split_ix = int(len(t) * test_split)
-    for arr, k in [(pos, 'x'), (vel, 'dx')]:
-        data[k], data['test_' + k] = arr[:split_ix], arr[split_ix:]
 
-    # TRAIN MODEL
-    args = get_args()
-    model, stats = train(data, args)
+    
+    
+
+    #Finding the number of time values we have for each trajectory
+    increments = data.shape[1]
+
+    #Loop the training maxT times
+    for i in range(0, increments):
+        
+        pos, vel = data[:, i, 1:4], data[:, i, 4:7]
+        data2 = {'x':pos, 'dx':vel}
+        
+        #Splitting pos
+        test_split = 0.1
+        N_test = int(len(pos)*test_split)
+    
+        indices = np.random.choice(len(pos), N_test, replace = False)
+        test_pos = pos[indices]
+        train_pos = np.delete(pos, indices)
+        
+        #Splitting vel
+        N_test = int(len(vel)*test_split)
+        
+        indices = np.random.choice(len(vel), N_test, replace = False)
+        test_vel = vel[indices]
+        train_vel = np.delete(vel, indices)
+        
+        data2 = {'x':train_pos, 'test_x': test_pos, 'dx': train_vel, 'test_dx': test_vel}
+        
+        # TRAIN MODEL
+        args = get_args()
+        model, stats = train(data2, args)
 
     # Integrate Model
     t_span = [t[0], t[-1]]
