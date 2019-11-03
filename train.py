@@ -11,6 +11,8 @@ import scipy.integrate
 from datetime import datetime
 solve_ivp = scipy.integrate.solve_ivp
 
+from joblib import Parallel, delayed
+
 import os, sys
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -99,6 +101,32 @@ def integrate_model(model, t_span, y0, **kwargs):
 
     return solve_ivp(fun=fun, t_span=t_span, y0=y0, **kwargs)
 
+def train_this_model():
+#    print(f"Training model {+1} of {increments}...")
+
+    t, pos, vel = data[:, 0], data[:,  1:4], data[:, 4:7]
+
+    test_split = 0.1
+    N_test = int(len(pos) * test_split)
+
+    # Splitting pos
+    indices = np.random.choice(len(pos), N_test, replace=False)
+    test_pos = pos[indices]
+    train_pos = np.delete(pos, indices, axis=0)
+
+    # Splitting vel
+    indices = np.random.choice(len(vel), N_test, replace=False)
+    test_vel = vel[indices]
+    train_vel = np.delete(vel, indices, axis=0)
+
+    data2 = {'x': train_pos, 'test_x': test_pos, 'dx': train_vel, 'test_dx': test_vel}
+
+    # TRAIN MODEL
+    args = get_args()
+    model, stats = train(data2, args)
+    
+    
+
 
 def train_models(N):
     # Loop this shit N times and create an array of all the data
@@ -115,36 +143,9 @@ def train_models(N):
     # Loop the training maxT times
     models = []
     t = None
-    for i in range(increments):
-        print(f"Training model {i+1} of {increments}...")
-
-        t, pos, vel = data[:, i, 0], data[:, i, 1:4], data[:, i, 4:7]
-
-        test_split = 0.1
-        N_test = int(len(pos) * test_split)
-
-        # Splitting pos
-        indices = np.random.choice(len(pos), N_test, replace=False)
-        test_pos = pos[indices]
-        train_pos = np.delete(pos, indices, axis=0)
-
-        # Splitting vel
-        indices = np.random.choice(len(vel), N_test, replace=False)
-        test_vel = vel[indices]
-        train_vel = np.delete(vel, indices, axis=0)
-
-        data2 = {'x': train_pos, 'test_x': test_pos, 'dx': train_vel, 'test_dx': test_vel}
-
-        # TRAIN MODEL
-        args = get_args()
-        model, stats = train(data2, args)
-        models.append(model)
-
-        # save
-        os.makedirs(args.save_dir) if not os.path.exists(args.save_dir) else None
-        label = '-rk4' if args.use_rk4 else ''
-        path = '{}/{}{}{}.tar'.format(args.save_dir, args.name, label, i)
-        torch.save(model.state_dict(), path)
+    models = Parallel(n_jobs=-1, verbose=verbosity_level, backend="multiprocessing")(
+             map(delayed(train_this_model), [ data[:,i,:]for i in range(increments)]))
+#    for i in range(increments):
 
     return models
 
