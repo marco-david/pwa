@@ -62,31 +62,14 @@ def get_trajectory(params):
     return run.times, run.expect
 
 
-#def run_parallel(params, M=1):
-#    results = []
-#    for _ in range(M):
-#        results.append(get_trajectory(params))
-#    results = np.array(results)
-#    return np.array([results.mean(), results.std()])
-
-
-if __name__ == '__main__':
-    # Time steps
-    T = 100
-
-    # Sample N values in each dimension
-    var = 0 # = 1/100 B
-    tf = 20
-    tauc = 5
-
+def generate_data(T, tf, var, tauc, N):
     # Create coordinates for the initial states
-    N = 500
-    theta = np.linspace(0, np.pi/2, N)
-    phi = np.linspace(0, 20*np.pi, N)
+    theta = np.linspace(0, np.pi / 2, N)
+    phi = np.linspace(0, 20 * np.pi, N)
 
     # MAIN CALL
-    for i in range(M):
-        initial_state = np.cos(theta[i]/2) * basis(2,0) + np.exp(1j * phi[i]) * np.sin(theta[i]/2) * basis(2,1)
+    for i in range(N):
+        initial_state = np.cos(theta[i] / 2) * basis(2, 0) + np.exp(1j * phi[i]) * np.sin(theta[i] / 2) * basis(2, 1)
         t, traj = get_trajectory((var, tf, tauc, T, initial_state))
         p = timeDeriv(t, traj)
         statearray = np.concatenate([t[:, np.newaxis], traj, p], axis=1)
@@ -94,15 +77,32 @@ if __name__ == '__main__':
         # Save position and momentum values to file
         np.savetxt(f"simulation-results/data{i}.csv", statearray, delimiter=",")
 
-#    labels = ['x', 'y', 'z']
-#      for i in range(3):
-#         plt.plot(t, traj[:, i], label=labels[i])
-#
-#     plt.legend()
-#     plt.xlabel("Time $t$")
-#     plt.ylabel(r"Expectation values $\langle\sigma_\alpha\rangle$")
-#     plt.title(f"$B = 1$, $\langle\eta^2\\rangle = {var}$, $\\tau_c = {tauc}$")
-#     plt.savefig(f'simulation-results/traj-plane{N}.pdf')
+
+if __name__ == '__main__':
+    # Parameters
+    T = 100 # Time steps
+    tf = 20 # Final time
+    var = 0 # Noise variance
+    tauc = 5 # Noise Correlation Time
+    N = 500 # Number of Trajectories (different initial states)
+
+    # Generate Data
+    #generate_data(T, tf, var, tauc, N)
+
+    # Plot Data
+    data = np.loadtxt(f'simulation-results/data0.csv', delimiter=",") # theta = phi = 0, i.e. [0, 0, 1]
+    t = data[:, 0]
+    traj = data[:, 1:4]
+
+    labels = ['x', 'y', 'z']
+    for i in range(3):
+        plt.plot(t, traj[:, i], label=labels[i])
+
+    plt.legend()
+    plt.xlabel("Time $t$")
+    plt.ylabel(r"Expectation values $\langle\sigma_\alpha\rangle$")
+    plt.title(f"$B = 1$, $\langle\eta^2\\rangle = {var}$, $\\tau_c = {tauc}$")
+    plt.savefig(f'simulation-results/traj-plane{N}.pdf')
 
 
 
