@@ -60,8 +60,8 @@ class Run(object):
 
 
 def get_trajectory(params):
-    var, tf, tauc, T = params
-    run = Run(var, tauc, tf, T).solve
+    var, tf, tauc, T, state = params
+    run = Run(var, tauc, tf, T, initial_state = state).solve
     return run.times, run.expect
 
 
@@ -85,23 +85,32 @@ if __name__ == '__main__':
     tf = 20
     tauc = 5
 
+    # Create 3 vectors for the initial conditions
+    a = 1 # large a concentrates the spiral at the pole
+    M =10000
+    t = np.linspace(-1,0,M)
+    x = np.cos(t)/(1+(a*t)**2)**(1/2)
+    y = np.sin(t)/(1+(a*t)**2)**(1/2)
+    z = -a*t/(1+(a*t)**2)**(1/2)
+
     # MAIN CALL
-    t, traj = get_trajectory((var, tf, tauc, T))
-    p = timeDeriv(t, traj)
-    statearray = np.concatenate([t[:, np.newaxis], traj, p], axis=1)
+    for i in range(M):
+        t, traj = get_trajectory((var, tf, tauc, T, np.array([x[i],y[i],z[i]])))
+        p = timeDeriv(t, traj)
+        statearray = np.concatenate([t[:, np.newaxis], traj, p], axis=1)
 
-    # Save position and momentum values to file
-    np.savetxt(f"simulation-results/data{N}.csv", statearray, delimiter=",")
+        # Save position and momentum values to file
+        np.savetxt(f"simulation-results/data{i}.csv", statearray, delimiter=",")
 
-    labels = ['x', 'y', 'z']
-    for i in range(3):
-        plt.plot(t, traj[:, i], label=labels[i])
-
-    plt.legend()
-    plt.xlabel("Time $t$")
-    plt.ylabel(r"Expectation values $\langle\sigma_\alpha\rangle$")
-    plt.title(f"$B = 1$, $\langle\eta^2\\rangle = {var}$, $\\tau_c = {tauc}$")
-    plt.savefig(f'simulation-results/traj-plane{N}.pdf')
+#    labels = ['x', 'y', 'z']
+#      for i in range(3):
+#         plt.plot(t, traj[:, i], label=labels[i])
+#
+#     plt.legend()
+#     plt.xlabel("Time $t$")
+#     plt.ylabel(r"Expectation values $\langle\sigma_\alpha\rangle$")
+#     plt.title(f"$B = 1$, $\langle\eta^2\\rangle = {var}$, $\\tau_c = {tauc}$")
+#     plt.savefig(f'simulation-results/traj-plane{N}.pdf')
 
     #errors = np.array(e_list)
     #means = np.squeeze(errors.mean(axis=0))
